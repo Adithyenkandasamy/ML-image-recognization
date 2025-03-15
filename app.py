@@ -1,47 +1,61 @@
-from flask import Flask, request, render_template, jsonify
+import os
+import json
+import numpy as np
+from flask import Flask, request, jsonify
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image
-import numpy as np
-import os
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = 'uploads/'
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 # Load the trained model
 model = load_model('trained_model.h5')
 
-# Define function to preprocess image
-def preprocess_image(img_path):
+# Load class names correctly
+class_file = 'class_names.json'
+if os.path.exists(class_file):
+    with open(class_file, 'r') as f:
+        categories = json.load(f)
+    if isinstance(categories, list):
+        categories = {i: name for i, name in enumerate(categories)}
+else:
+    categories = {i: f"Class {i}" for i in range(model.output_shape[1])}
+
+# Function to predict image class
+def predict_image(img_path):
     img = image.load_img(img_path, target_size=(224, 224))
     img_array = image.img_to_array(img)
-    img_array = np.expand_dims(img_array, axis=0) / 255.0
-    return img_array
+    img_array = np.expand_dims(img_array, axis=0) / 255.0  # Normalize
+    predictions = model.predict(img_array)[0]
+    max_prob = np.max(predictions)
+    predicted_class_index = np.argmax(predictions)
+    
+    response = {
+        "file": os.path.basename(img_path),
+        "predicted_class": categories[predicted_class_index],
+        "confidence": round(float(max_prob) * 100, 2),
+        "class_probabilities": {categories[i]: round(float(prob) * 100, 2) for i, prob in enumerate(predictions)}
+    }
+    return response
 
-# Define route for home page
-@app.route('/')
-def home():
-    return render_template('index.html')
-
-# Define route for image prediction
 @app.route('/predict', methods=['POST'])
-def predict():
+def upload_and_predict():
     if 'file' not in request.files:
-        return jsonify({'error': 'No file uploaded'})
+        return jsonify({"error": "No file uploaded"}), 400
     
     file = request.files['file']
     if file.filename == '':
-        return jsonify({'error': 'No selected file'})
+        return jsonify({"error": "No selected file"}), 400
     
-    filepath = os.path.join('static/uploads', file.filename)
+    filename = secure_filename(file.filename)
+    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     file.save(filepath)
     
-    img_array = preprocess_image(filepath)
-    predictions = model.predict(img_array)
-    predicted_class = np.argmax(predictions, axis=1)
-    
-    label = "Water Bottle" if predicted_class[0] == 0 else "Laptop"
-    
-    return jsonify({'prediction': label, 'file_path': filepath})
+    result = predict_image(filepath)
+    os.remove(filepath)  # Clean up after prediction
+    return jsonify(result)
 
 if __name__ == '__main__':
-    os.makedirs('static/uploads', exist_ok=True)
-    app.run(debug=True,host="0.0.0.0")
+    app.run(debug=True)
