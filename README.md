@@ -86,6 +86,4 @@ Then, open `http://127.0.0.1:5000/` in your browser.
 ## 🔗 GitHub Repository
 [ML-Image-Recognition](https://github.com/Adithyenkandasamy/ML-image-recognition)
 
----
-Now your README is well-structured and formatted properly for GitHub! 🚀
 
