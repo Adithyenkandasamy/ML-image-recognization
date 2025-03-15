@@ -36,7 +36,7 @@ ML-Image-Recognition/
 🚀 Setup & Installation
 1️⃣ Clone the Repository
 
-git clone <your-github-repo-link>
+git clone <https://github.com/Adithyenkandasamy/ML-image-recognization>
 cd ML-Image-Recognition
 
 2️⃣ Create & Activate a Virtual Environment
