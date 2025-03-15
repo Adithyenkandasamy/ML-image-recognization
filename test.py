@@ -18,4 +18,4 @@ predicted_class = np.argmax(predictions, axis=1)
 if predicted_class[0] == 0:
     print("Water Bottle")
 else:
-    print("Lock and Key")
+    print("Laptop")

@@ -32,13 +32,13 @@ validation_datagen = ImageDataGenerator(rescale=1./255)
 
 # Load training and validation datasets
 train_generator = train_datagen.flow_from_directory(
-    '/home/jinwoo/Desktop/image_class/train-images',
+    '/home/jinwoo/Desktop/ML-image-recognition/train-images',
     target_size=(224, 224),
     batch_size=32,
     class_mode='categorical')
 
 validation_generator = validation_datagen.flow_from_directory(
-    '/home/jinwoo/Desktop/image_class/validation-images',
+    '/home/jinwoo/Desktop/ML-image-recognition/validation-images',
     target_size=(224, 224),
     batch_size=32,
     class_mode='categorical')
